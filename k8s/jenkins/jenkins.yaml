@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-cluster
+  namespace: jenkins-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins-cluster
+  template:
+    metadata:
+      labels:
+        app: jenkins-cluster
+    spec:
+      imagePullSecrets:
+      - name: aliyun
+      containers:
+      - name: jenkins-cluster
+        image: jenkinsci/blueocean
+        resources:
+          limits:
+            memory: "8G"
+          requests:
+            memory: "4G"
+        ports:    
+        - containerPort: 8080
+        env: 
+          - name: JENKINS_OPTS
+            value: "--prefix=/transform/jenkins"
+        volumeMounts:
+        - name: jenkins-home-mnt
+          mountPath: /var/jenkins_home
+        - name: docker-graph-storage
+          mountPath: /var/lib/docker
+      volumes:
+      - name: jenkins-home-mnt  
+        persistentVolumeClaim:
+          claimName: jenkins-home-pvc
+      - name: docker-graph-storage 
+        hostPath: 
+          path: /var/lib/docker
+          type: Directory
