@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gogs
+  labels:
+    app: gogs
+spec:
+  selector:
+    matchLabels:
+      app: gogs
+  template:
+    metadata:
+      labels:
+        app: gogs
+    spec:
+      containers:
+      - name: gogs
+        image: registry.cn-hangzhou.aliyuncs.com/sre_pub/gogs
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
+          name: gogs
+        - containerPort: 22
+          name: ssh
+        volumeMounts:
+        - name: gogs-data
+          mountPath: /data
+      volumes:
+      - name: gogs-data
+        persistentVolumeClaim:
+          claimName: gogs-data
