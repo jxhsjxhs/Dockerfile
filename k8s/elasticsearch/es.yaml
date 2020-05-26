@@ -1,0 +1,76 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  namespace: istio-cosmo
+  name: esdata
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 20G
+  storageClassName: nfs-storage
+
+---
+
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  namespace: istio-cosmo
+  name: eslog
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 20G
+  storageClassName: nfs-storage
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: istio-cosmo
+  name: elasticsearch
+  labels:
+    name: elasticsearch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: elasticsearch
+  template:
+    metadata:
+      name: es
+      labels:
+        name: elasticsearch
+    spec:
+      initContainers:
+      - name: init-sysctl
+        image: busybox:1.27.2
+        command:
+        - sysctl
+        - -w
+        - vm.max_map_count=262144
+        securityContext:
+          privileged: true
+      containers:
+        - image: registry.cn-hangzhou.aliyuncs.com/jxhs/elasticsearch:6.4.0
+          name: elasticsearch
+          ports:
+            - name: es-port
+              containerPort: 9200
+            - name: es-tran-port
+              containerPort: 9300
+          volumeMounts:
+            - name: esdata
+              mountPath: /usr/share/elasticsearch/data
+            - name: eslog
+              mountPath: /usr/share/elasticsearch/logs
+      volumes:
+        - name: esdata
+          persistentVolumeClaim:
+            claimName: esdata
+        - name: eslog
+          persistentVolumeClaim:
+            claimName: eslog
