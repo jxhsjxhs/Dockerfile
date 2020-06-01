@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zookeeper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zookeeper
+  minReadySeconds: 1
+  progressDeadlineSeconds: 60
+  revisionHistoryLimit: 5
+  template:
+    metadata:
+      name: zookeeper
+      labels:
+        app: zookeeper
+    spec:
+      containers:
+      - name: zookeeper
+        image: zookeeper:latest
+        ports:
+        - containerPort: 2181
+        ports:
+        - containerPort: 2888
+        resources:
+          limits:
+            cpu: 10m                    #限制cpu最大的数量
+            memory: 500Mi               #限制最大内存的大小
+          requests:
+            cpu: 10m                    #限制cpu最小的数量
+            memory: 400Mi               #限制最小内存的大小
+        volumeMounts:                   #挂载时间配置文件，使pod的时间和本地一致
+        - name: tz-config
+          mountPath: /etc/localtime
+      volumes:
+      - name: tz-config
+        hostPath:
+          path: /usr/share/zoneinfo/Asia/Shanghai
